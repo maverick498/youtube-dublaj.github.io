@@ -79,7 +79,7 @@ def get_subtitles():
             'no_warnings': True,
         }
         # EKLEMELER: Android client, cookie ve header
-        ydl_opts["extractor_args"] = {"youtube": {"player_client": ["android"]}}
+        ydl_opts["extractor_args"] = {"youtube": {"player_client": ["web"]}}
         cookies_path = os.environ.get("YDL_COOKIES_PATH")
         if cookies_path:
             ydl_opts["cookiefile"] = cookies_path
@@ -257,3 +257,4 @@ def health_check():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+
