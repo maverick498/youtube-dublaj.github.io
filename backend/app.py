@@ -39,7 +39,7 @@ def parse_time_to_seconds(time_str):
         else:
             time_part = time_str
             ms = 0
-        time_parts = time_part.split(':')
+        time_parts = time_str.split(':') if '.' not in time_str else time_part.split(':')
         if len(time_parts) == 3:
             hours, minutes, seconds = map(int, time_parts)
             total_seconds = hours * 3600 + minutes * 60 + seconds + ms
@@ -59,6 +59,38 @@ def clean_subtitle_text(text):
     text = text.strip()
     return text
 
+def extract_info_with_clients(video_url: str):
+    """
+    Birden fazla YouTube player_client ile sırasıyla dene.
+    Çerez varsa (YDL_COOKIES_PATH), UA header'ları ve noplaylist vb. kullan.
+    """
+    clients = ["web", "web_embedded", "mweb", "android", "ios", "tv_embedded", "tv"]
+    last_err = None
+    for client in clients:
+        ydl_opts = {
+            "writesubtitles": True,
+            "writeautomaticsub": True,
+            "subtitleslangs": ["tr", "en", "auto"],
+            "subtitlesformat": "vtt",
+            "skip_download": True,
+            "noplaylist": True,
+            "quiet": True,
+            "no_warnings": True,
+            "extractor_args": {"youtube": {"player_client": [client]}},
+            "http_headers": UA_HEADERS,
+        }
+        cookies_path = os.environ.get("YDL_COOKIES_PATH")
+        if cookies_path:
+            ydl_opts["cookiefile"] = cookies_path
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=False)
+            return info, client
+        except Exception as e:
+            last_err = e
+            continue
+    raise RuntimeError(f"yt-dlp failed for clients {clients}. Last error: {last_err}")
+
 @app.route('/get-subtitles', methods=['POST'])
 def get_subtitles():
     try:
@@ -69,24 +101,8 @@ def get_subtitles():
         if 'youtube.com' not in video_url and 'youtu.be' not in video_url:
             return jsonify({'error': 'Geçerli bir YouTube URL\'si girin'}), 400
 
-        ydl_opts = {
-            'writesubtitles': True,
-            'writeautomaticsub': True,
-            'subtitleslangs': ['tr', 'en', 'auto'],
-            'subtitlesformat': 'vtt',
-            'skip_download': True,
-            'quiet': True,
-            'no_warnings': True,
-        }
-        # EKLEMELER: Android client, cookie ve header
-        ydl_opts["extractor_args"] = {"youtube": {"player_client": ["web"]}}
-        cookies_path = os.environ.get("YDL_COOKIES_PATH")
-        if cookies_path:
-            ydl_opts["cookiefile"] = cookies_path
-        ydl_opts["http_headers"] = UA_HEADERS
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
+        # Çoklu client denemesi
+        info, used_client = extract_info_with_clients(video_url)
 
         video_title = info.get('title', 'Bilinmeyen Video')
         video_duration = info.get('duration', 0)
@@ -117,8 +133,9 @@ def get_subtitles():
         if not vtt_url:
             return jsonify({'error': 'VTT formatında altyazı bulunamadı'}), 404
 
-        # EKLEME: VTT isteğinde header kullan
+        # VTT isteğinde header kullan
         response = requests.get(vtt_url, headers=UA_HEADERS, timeout=20)
+        response.raise_for_status()
         vtt_content = response.text
 
         subtitles_list = []
@@ -155,7 +172,8 @@ def get_subtitles():
             'video_duration': video_duration,
             'subtitle_language': used_lang,
             'subtitles_count': len(subtitles_list),
-            'subtitles': subtitles_list
+            'subtitles': subtitles_list,
+            'yt_client': used_client
         })
     except Exception as e:
         print(f"Hata: {str(e)}")
@@ -257,4 +275,3 @@ def health_check():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
-
