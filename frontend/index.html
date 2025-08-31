@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Gerçek Zamanlı Dublaj</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎙️ YouTube Gerçek Zamanlı Dublaj</h1>
+      <p>YouTube videolarını farklı dillere gerçek zamanlı dublaj yapın</p>
+    </header>
+
+    <div class="input-section">
+      <div class="url-input-group">
+        <input type="text" id="videoUrl" placeholder="YouTube video linkini buraya yapıştırın..." />
+        <button id="loadVideo" class="btn-primary">Video Yükle</button>
+      </div>
+
+      <div class="language-selection">
+        <label for="targetLanguage">Hedef Dil:</label>
+        <select id="targetLanguage">
+          <option value="tr">Türkçe</option>
+          <option value="en">İngilizce</option>
+          <option value="es">İspanyolca</option>
+          <option value="fr">Fransızca</option>
+          <option value="de">Almanca</option>
+          <option value="it">İtalyanca</option>
+          <option value="pt">Portekizce</option>
+          <option value="ru">Rusça</option>
+          <option value="ja">Japonca</option>
+          <option value="ko">Korece</option>
+          <option value="zh">Çince</option>
+          <option value="ar">Arapça</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="status-section">
+      <div id="loadingIndicator" class="loading hidden">
+        <div class="spinner"></div>
+        <span>Altyazılar yükleniyor...</span>
+      </div>
+      <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <div class="video-section">
+      <div id="videoContainer" class="video-container hidden">
+        <div id="youtubePlayer"></div>
+        <div class="video-controls">
+          <button id="startDubbing" class="btn-success" disabled>Dublajı Başlat</button>
+          <button id="stopDubbing" class="btn-danger" disabled>Dublajı Durdur</button>
+          <div class="volume-control">
+            <label for="volumeSlider">Dublaj Ses Seviyesi:</label>
+            <input type="range" id="volumeSlider" min="0" max="100" value="80">
+            <span id="volumeValue">80%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subtitle-section">
+      <div id="subtitleInfo" class="subtitle-info hidden">
+        <h3>Altyazı Bilgileri</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <strong>Video Başlığı:</strong>
+            <span id="videoTitle">-</span>
+          </div>
+          <div class="info-item">
+            <strong>Video Süresi:</strong>
+            <span id="videoDuration">-</span>
+          </div>
+          <div class="info-item">
+            <strong>Altyazı Dili:</strong>
+            <span id="subtitleLanguage">-</span>
+          </div>
+          <div class="info-item">
+            <strong>Altyazı Sayısı:</strong>
+            <span id="subtitleCount">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="currentSubtitle" class="current-subtitle hidden">
+        <div class="subtitle-text">
+          <div class="original-text">
+            <strong>Orijinal:</strong> <span id="originalText">-</span>
+          </div>
+          <div class="translated-text">
+            <strong>Çeviri:</strong> <span id="translatedText">-</span>
+          </div>
+        </div>
+        <div class="subtitle-progress">
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+          <span id="timeInfo">00:00 / 00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-config hidden" id="apiConfig">
+      <h3>API Yapılandırması</h3>
+      <div class="config-grid">
+        <div class="config-item">
+          <label for="backendBaseUrl">Backend URL (Render adresiniz):</label>
+          <input type="text" id="backendBaseUrl" placeholder="https://youtube-dublaj-app.onrender.com">
+        </div>
+        <div class="config-item">
+          <label for="translateApiKey">Google Translate API Key:</label>
+          <input type="password" id="translateApiKey" placeholder="API anahtarınızı girin">
+        </div>
+        <div class="config-item">
+          <label for="ttsApiKey">Google Text-to-Speech API Key:</label>
+          <input type="password" id="ttsApiKey" placeholder="API anahtarınızı girin">
+        </div>
+        <button id="saveApiKeys" class="btn-secondary">Ayarları Kaydet</button>
+      </div>
+      <p class="hint">Güvenlik notu: Üretimde anahtarları frontend'e koymak yerine backend üzerinden proxy kullanın.</p>
+    </div>
+  </div>
+
+  <!-- YouTube IFrame Player API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="script.js"></script>
+</body>
+</html>
